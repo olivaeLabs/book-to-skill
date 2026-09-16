@@ -28,3 +28,8 @@ docs/BACKERS.md
 
 # Local evaluation work products
 .eval-work/
+
+# Virtual environments and local workspace directories
+.venv/
+.work/
+

@@ -1,24 +1,19 @@
 import os
-import tempfile
 from pathlib import Path
 
 def default_output_dir() -> Path:
     """Per-run work directory, unique to this process.
 
     The PID is part of the name so two extractions running at the same time
-    cannot overwrite each other. Every run previously shared one fixed path
-    ($TMPDIR/book_skill_work), so whichever run finished second silently
-    replaced the first run's full_text.txt and metadata.json — and an agent
-    polling for metadata.json could pick up a *different document's*
-    extraction without any error, then build a skill from the wrong source.
+    cannot overwrite each other.
 
-    The name is deliberately a sibling of the old fixed path rather than a
-    child of it. An older cleanup routine that removes "book_skill_work"
-    then simply finds nothing, instead of deleting a live concurrent run.
-
-    BOOK_SKILL_WORKDIR still overrides this completely.
+    Defaults to a local workspace '.work' directory to comply with 'No /tmp'
+    guidelines and isolate artifacts from shared system temp directories.
+    Can be configured via BOOK_SKILL_WORKDIR_BASE or overridden completely
+    by BOOK_SKILL_WORKDIR.
     """
-    return Path(tempfile.gettempdir()) / f"book_skill_work-{os.getpid()}"
+    base_dir = Path(os.environ.get("BOOK_SKILL_WORKDIR_BASE") or (Path.cwd() / ".work"))
+    return base_dir / f"book_skill_work-{os.getpid()}"
 
 
 # `or` rather than a get() default: BOOK_SKILL_WORKDIR set to an empty string

@@ -15,7 +15,6 @@ directory, which the run would then populate and chmod to 0700.
 import importlib
 import os
 import sys
-import tempfile
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
@@ -48,22 +47,25 @@ def test_default_workdir_is_unique_per_process(monkeypatch):
 
 
 def test_default_workdir_is_sibling_not_child_of_legacy_path(monkeypatch):
-    """An older cleanup that removes "book_skill_work" must not hit a live run.
-
-    Nesting under the legacy directory would mean a stale cleanup routine
-    deleting a concurrent extraction's output, which is worse than the bug
-    being fixed. The per-run directory is therefore a sibling.
-    """
+    """An older cleanup that removes "book_skill_work" must not hit a live run."""
     monkeypatch.setattr(os, "getpid", lambda: 4242)
-    legacy = Path(tempfile.gettempdir()) / "book_skill_work"
+    legacy = Path.cwd() / ".work" / "book_skill_work"
 
     assert legacy not in default_output_dir().parents
 
 
-def test_default_workdir_lives_in_tempdir(monkeypatch):
+def test_default_workdir_lives_in_workdir(monkeypatch):
     monkeypatch.setattr(os, "getpid", lambda: 4242)
 
-    assert default_output_dir().parent == Path(tempfile.gettempdir())
+    assert default_output_dir().parent == Path.cwd() / ".work"
+
+
+def test_workdir_base_env_override(monkeypatch, tmp_path):
+    monkeypatch.setattr(os, "getpid", lambda: 4242)
+    base = tmp_path / "custom_base"
+    monkeypatch.setenv("BOOK_SKILL_WORKDIR_BASE", str(base))
+
+    assert default_output_dir().parent == base
 
 
 def test_env_override_wins(monkeypatch, tmp_path):
@@ -81,7 +83,8 @@ def test_empty_env_override_does_not_become_cwd(monkeypatch):
 
     assert config.OUTPUT_DIR != Path("")
     assert config.OUTPUT_DIR != Path.cwd()
-    assert config.OUTPUT_DIR.parent == Path(tempfile.gettempdir())
+    assert config.OUTPUT_DIR.parent == Path.cwd() / ".work"
+
 
 
 def test_unset_env_uses_per_run_default(monkeypatch):

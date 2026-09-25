@@ -106,3 +106,12 @@ Live model experiments are expensive and are never the first validation step.
 ## Instruction scope
 
 This root file applies repository-wide. A more deeply nested `AGENTS.md` may add narrower instructions for its subtree; the more specific file wins when instructions conflict. Direct user/system instructions take precedence over repository guidance.
+
+---
+
+## ⚡ Cache Hit (DeepSeek V4.1 Flash) — regra do workspace
+- Prompt: estáticos no INÍCIO (system/AGENTS.md/tools) → histórico append-only → variável no FIM.
+- NÃO editar arquivos de instrução nem ligar/desligar tools no meio da sessão.
+- CONTINUAR a sessão (não abrir nova) e NÃO trocar de modelo no meio.
+- Medir sempre: `opencode-cache-report` (meta ≥ 90%). Guia: `generic-dev/knowledge/cache-hit-deepseek.md`.
+- Hermes: `--usage-file` automático (resumo por run) e `HERMES_BATCH=1` para lotes (mesma sessão).

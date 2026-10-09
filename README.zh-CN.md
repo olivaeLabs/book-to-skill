@@ -15,8 +15,7 @@
 > 查看差异：`git log 907be50..master -- README.md`
 
 <p align="center">
-  <strong>将任意技术书籍、文档文件夹或资料集合，转换为统一的 Agent Skill——可在 GitHub Copilot CLI、Amp、Claude Code 或 Hermes Agent 中随时学习、查阅并在工作中使用。</strong>
-</p>
+<strong>将任意技术书籍、文档文件夹或资料集合，转换为统一的 Agent Skill——可在 GitHub Copilot CLI、Amp、Claude Code、Hermes Agent 或 OpenCode, OpenClaw 中随时学习、查阅并在工作中使用。</strong></p>
 
 <p align="center">
   <a href="https://github.com/virgiliojr94/book-to-skill/releases"><img src="https://img.shields.io/github/v/release/virgiliojr94/book-to-skill?style=for-the-badge&color=blueviolet" alt="Latest release"></a>
@@ -71,13 +70,12 @@
 
 安装后，输入 `/your-book-slug replication`，Agent 会读取对应章节，基于实际内容回答。没有幻觉，不用翻 PDF。书成为你工作流的一部分。
 
-兼容任何支持开放 [Agent Skills](https://github.com/agentskills/agentskills) 标准的宿主 —— GitHub Copilot CLI、Amp、Claude Code 和 Hermes Agent 都读取相同的 `SKILL.md` 格式。
-
+兼容任何支持开放 [Agent Skills](https://github.com/agentskills/agentskills) 标准的宿主 —— GitHub Copilot CLI、Amp、Claude Code、Hermes Agent 和 OpenCode, OpenClaw 都读取相同的 `SKILL.md` 格式。
 ---
 
 ## 📦 生成内容
 
-运行 `/book-to-skill your-book.pdf`（或文件夹、glob、文件列表）后，会在 Agent 的 skills 目录下生成完整 skill（Copilot CLI：`~/.copilot/skills/<slug>/`；Amp 或跨 Agent：`~/.agents/skills/<slug>/`；Claude Code：`~/.claude/skills/<slug>/`；Hermes Agent：`$HERMES_HOME/skills/<category>/<slug>/`）：
+运行 `/book-to-skill your-book.pdf`（或文件夹、glob、文件列表）后，默认会在用户级跨 Agent 目录 `~/.agents/skills/<slug>/` 生成一份完整 skill，供 Copilot CLI、Amp、Codex、OpenCode 和使用默认状态目录的 OpenClaw 直接发现。OpenCode 也会读取其托管目录 `~/.config/opencode/skills/<slug>/`；若设置了非默认 `OPENCLAW_STATE_DIR`，OpenClaw 则需使用当前状态目录下的 `skills/`。在 Claude Code 中运行时，转换器还会尝试在 `~/.claude/skills/<slug>/` 创建符号链接；只有回读验证通过，才会报告 Claude Code 已发现该 skill，否则运行报告会说明链接未建立。Hermes Agent 不扫描跨 Agent 目录，其个人 skill 按类别安装在 `${HERMES_HOME:-$HOME/.hermes}/skills/<category>/<slug>/`。也可以按需显式选择 OpenClaw 或 OpenCode 托管目录，以及项目本地目录：
 
 | 文件 | 用途 | 大小 |
 |------|------|------|
@@ -140,6 +138,8 @@ npx skills add virgiliojr94/book-to-skill
 git clone https://github.com/virgiliojr94/book-to-skill.git ~/.claude/skills/book-to-skill
 # （Copilot CLI：~/.copilot/skills/ · Amp/跨 Agent：~/.agents/skills/）
 # （Hermes Agent：${HERMES_HOME:-$HOME/.hermes}/skills/<category>/）
+# （OpenClaw：${OPENCLAW_STATE_DIR:-$HOME/.openclaw}/skills/；~/.agents/skills/ 仅限默认状态）
+# （OpenCode：~/.agents/skills/ —— 同时也读取 ~/.config/opencode/skills/）
 ```
 
 📥 **所有宿主、可选提取器与独立 CLI → [docs/install.md](docs/install.md)**
@@ -264,5 +264,5 @@ MIT —— 适用于本仓库中的转换器（代码 + skill 定义），**不*
 
 ---
 
-<!-- translation-meta: source=README.md@907be508ee17428fea0179f9996bde80e5282a0f date=2026-09-01 -->
-<sub>简体中文翻译与英文 README 同步于 commit <code>907be50</code> · 英文版为准</sub>
+<!-- translation-meta: source=README.md@c108d25b0cb58e1bdc361f3de02ed9f37075152f date=2026-10-01 scope=destination-policy -->
+<sub>目录策略与英文 README 的 commit <code>c108d25</code> 同步 · 英文版为准</sub>

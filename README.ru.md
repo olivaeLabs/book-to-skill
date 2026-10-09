@@ -16,8 +16,7 @@
 > Чтобы увидеть drift: `git log 903d102..master -- README.md`
 
 <p align="center">
-  <strong>Превратите любую техническую книгу, папку документов или набор источников в единый agent skill — чтобы изучать, ссылаться и использовать в GitHub Copilot CLI, Amp, Claude Code или Hermes Agent.</strong>
-</p>
+<strong>Превратите любую техническую книгу, папку документов или набор источников в единый agent skill — чтобы изучать, ссылаться и использовать в GitHub Copilot CLI, Amp, Claude Code, Hermes Agent или OpenCode, OpenClaw.</strong></p>
 
 <p align="center">
   <a href="https://github.com/virgiliojr94/book-to-skill/releases"><img src="https://img.shields.io/github/v/release/virgiliojr94/book-to-skill?style=for-the-badge&color=blueviolet" alt="Latest release"></a>
@@ -71,13 +70,12 @@
 
 После установки: `/your-book-slug replication` — агент читает нужную главу и отвечает из текста. Без галлюцинаций и копания в PDF.
 
-Работает с хостами open [Agent Skills](https://github.com/agentskills/agentskills) — GitHub Copilot CLI, Amp, Claude Code и Hermes Agent (общий формат `SKILL.md`).
-
+Работает с хостами open [Agent Skills](https://github.com/agentskills/agentskills) — GitHub Copilot CLI, Amp, Claude Code, Hermes Agent и OpenCode, OpenClaw (общий формат `SKILL.md`).
 ---
 
 ## 📦 Что получается
 
-`/book-to-skill your-book.pdf` (или folder/glob) создаёт skill в директории skills агента (`~/.copilot/skills/<slug>/`, `~/.agents/skills/<slug>/`, `~/.claude/skills/<slug>/` или `$HERMES_HOME/skills/<category>/<slug>/` для Hermes Agent):
+`/book-to-skill your-book.pdf` (или путь к папке, шаблон файлов либо их список) по умолчанию создаёт одну копию skill в общей пользовательской директории `~/.agents/skills/<slug>/`. Её напрямую находят Copilot CLI, Amp, Codex, OpenCode и OpenClaw с каталогом состояния по умолчанию. OpenCode также читает собственную директорию `~/.config/opencode/skills/<slug>/`; если задан нестандартный `OPENCLAW_STATE_DIR`, для OpenClaw следует использовать `skills/` в активном каталоге состояния. При запуске в Claude Code конвертер пытается создать символьную ссылку `~/.claude/skills/<slug>/` и проверяет её чтением: если проверка не прошла, об этом сообщается в отчёте. Hermes Agent не сканирует общую директорию; его личные skills размещаются по категориям в `${HERMES_HOME:-$HOME/.hermes}/skills/<category>/<slug>/`. Управляемые директории OpenClaw и OpenCode, а также директории проекта можно выбрать явно:
 
 | File | Purpose | Size |
 |------|---------|------|
@@ -141,6 +139,8 @@ npx skills add virgiliojr94/book-to-skill
 git clone https://github.com/virgiliojr94/book-to-skill.git ~/.claude/skills/book-to-skill
 # (Copilot: ~/.copilot/skills/ · Amp: ~/.agents/skills/)
 # (Hermes Agent: ${HERMES_HOME:-$HOME/.hermes}/skills/<category>/)
+# (OpenClaw: ${OPENCLAW_STATE_DIR:-$HOME/.openclaw}/skills/; ~/.agents/skills/ только в состоянии по умолчанию)
+# (OpenCode: ~/.agents/skills/ — также читает ~/.config/opencode/skills/)
 ```
 
 📥 **Все хосты → [docs/install.md](docs/install.md)**
@@ -213,5 +213,5 @@ MIT — на converter в этом репо, **не** на книги/докум
 
 ---
 
-<!-- translation-meta: source=README.md@903d102fe8f67ea0fe3db7bea85eec7d8b505967 date=2026-08-14 maintainer=@MonteNegroX -->
-<sub>Russian translation synced to English README at commit <code>903d102</code> · English remains canonical · Maintainer: <a href="https://github.com/MonteNegroX">@MonteNegroX</a></sub>
+<!-- translation-meta: source=README.md@c108d25b0cb58e1bdc361f3de02ed9f37075152f date=2026-10-01 scope=destination-policy maintainer=@MonteNegroX -->
+<sub>Destination policy synced to English README at commit <code>c108d25</code> · English remains canonical · Maintainer: <a href="https://github.com/MonteNegroX">@MonteNegroX</a></sub>

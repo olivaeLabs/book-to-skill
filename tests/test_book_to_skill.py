@@ -38,7 +38,7 @@ from book_to_skill.parsers import pdf as pdf_parser
 from book_to_skill.parsers.text import read_text_file
 from book_to_skill.parsers.docx import extract_docx_with_zipfile
 from book_to_skill.parsers.rtf import strip_rtf_fallback
-from book_to_skill.parsers.epub import extract_with_zipfile
+from book_to_skill.parsers.epub import count_epub_chapters, extract_with_zipfile
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -668,6 +668,33 @@ class TestDetectStructure:
         assert _chapter_number("এই অধ্যায়ে আমরা আলোচনা করব") is None
         assert _chapter_number("অধ্যায়") is None
 
+    def test_detects_odia_chapters(self):
+        """Odia headings: `ଅଧ୍ୟାୟ N`, Odia or Arabic digits."""
+        text = (
+            "ଅଧ୍ୟାୟ ୧ ପରିଚୟ\nସାରାଂଶ\n"
+            "ଅଧ୍ୟାୟ ୨ ପଦ୍ଧତି\nସାରାଂଶ\n"
+            "ଅଧ୍ୟାୟ 3 ଫଳାଫଳ\nସାରାଂଶ"
+        )
+        assert detect_structure(text)["chapters_detected"] == 3
+
+    def test_odia_markdown_prefix(self):
+        text = "## ଅଧ୍ୟାୟ ୧ ପ୍ରଥମ\nସାରାଂଶ\n## ଅଧ୍ୟାୟ ୨ ଦ୍ୱିତୀୟ\nସାରାଂଶ"
+        assert detect_structure(text)["chapters_detected"] == 2
+
+    def test_odia_prose_is_not_a_chapter_heading(self):
+        """An inflected form (ଅଧ୍ୟାୟରେ) or a bare word is not a heading."""
+        from book_to_skill.utils import _chapter_number
+
+        assert _chapter_number("ଏହି ଅଧ୍ୟାୟରେ ଆମେ ଆଲୋଚନା କରିବା") is None
+        assert _chapter_number("ଅଧ୍ୟାୟ") is None
+
+    def test_odia_does_not_collide_with_bengali(self):
+        """Odia ଅଧ୍ୟାୟ (U+0B05…) and Bengali অধ্যায় (U+0985…) are distinct."""
+        from book_to_skill.utils import _chapter_number
+
+        assert _chapter_number("ଅଧ୍ୟାୟ ୫") == 5
+        assert _chapter_number("অধ্যায় ৫") == 5
+
     def test_detects_tamil_chapters(self):
         """Tamil headings: `அத்தியாயம் N`, with Tamil or Arabic digits."""
         text = (
@@ -707,6 +734,75 @@ class TestDetectStructure:
 
         assert _chapter_number("ఈ అధ్యాయంలో మనం చర్చిస్తాము") is None
         assert _chapter_number("అధ్యాయం") is None
+
+    def test_detects_kannada_chapters(self):
+        """Kannada headings: `ಅಧ್ಯಾಯ N`, Kannada or Arabic digits."""
+        text = (
+            "ಅಧ್ಯಾಯ ೧ ಪರಿಚಯ\nಸಾರಾಂಶ\n"
+            "ಅಧ್ಯಾಯ ೨ ವಿಧಾನಗಳು\nಸಾರಾಂಶ\n"
+            "ಅಧ್ಯಾಯ 3 ಫಲಿತಾಂಶಗಳು\nಸಾರಾಂಶ"
+        )
+        assert detect_structure(text)["chapters_detected"] == 3
+
+    def test_kannada_markdown_prefix(self):
+        text = "## ಅಧ್ಯಾಯ ೧ ಮೊದಲನೆಯ\nಸಾರಾಂಶ\n## ಅಧ್ಯಾಯ ೨ ಎರಡನೆಯ\nಸಾರಾಂಶ"
+        assert detect_structure(text)["chapters_detected"] == 2
+
+    def test_kannada_prose_is_not_a_chapter_heading(self):
+        """An inflected form (ಅಧ್ಯಾಯದಲ್ಲಿ) or a bare word is not a heading."""
+        from book_to_skill.utils import _chapter_number
+
+        assert _chapter_number("ಈ ಅಧ್ಯಾಯದಲ್ಲಿ ನಾವು ಚರ್ಚಿಸುತ್ತೇವೆ") is None
+        assert _chapter_number("ಅಧ್ಯಾಯ") is None
+
+    def test_detects_malayalam_chapters(self):
+        """Malayalam headings: both spellings (അധ്യായം/അദ്ധ്യായം), Malayalam or Arabic digits."""
+        text = (
+            "അധ്യായം ൧ ആമുഖം\nസംഗ്രഹം\n"
+            "അദ്ധ്യായം ൨ രീതികൾ\nസംഗ്രഹം\n"
+            "അധ്യായം 3 ഫലങ്ങൾ\nസംഗ്രഹം"
+        )
+        assert detect_structure(text)["chapters_detected"] == 3
+
+    def test_malayalam_markdown_prefix(self):
+        text = "## അധ്യായം ൧ ഒന്നാമത്തേത്\nസംഗ്രഹം\n## അദ്ധ്യായം ൨ രണ്ടാമത്തേത്\nസംഗ്രഹം"
+        assert detect_structure(text)["chapters_detected"] == 2
+
+    def test_malayalam_prose_is_not_a_chapter_heading(self):
+        """An inflected form (അധ്യായത്തിൽ) or a bare word is not a heading."""
+        from book_to_skill.utils import _chapter_number
+
+        assert _chapter_number("ഈ അധ്യായത്തിൽ നാം ചർച്ച ചെയ്യുന്നു") is None
+        assert _chapter_number("അധ്യായം") is None
+
+    def test_detects_gujarati_chapters(self):
+        """Gujarati headings: both words (પ્રકરણ/અધ્યાય), Gujarati or Arabic digits."""
+        text = (
+            "પ્રકરણ ૧ પરિચય\nસારાંશ\n"
+            "અધ્યાય ૨ પદ્ધતિઓ\nસારાંશ\n"
+            "પ્રકરણ 3 પરિણામો\nસારાંશ"
+        )
+        assert detect_structure(text)["chapters_detected"] == 3
+
+    def test_gujarati_markdown_prefix(self):
+        text = "## પ્રકરણ ૧ પહેલું\nસારાંશ\n## અધ્યાય ૨ બીજું\nસારાંશ"
+        assert detect_structure(text)["chapters_detected"] == 2
+
+    def test_gujarati_prose_is_not_a_chapter_heading(self):
+        """Inflected forms (પ્રકરણમાં/અધ્યાયમાં) and bare words are not headings."""
+        from book_to_skill.utils import _chapter_number
+
+        assert _chapter_number("આ પ્રકરણમાં આપણે ચર્ચા કરીશું") is None
+        assert _chapter_number("આ અધ્યાયમાં આપણે ચર્ચા કરીશું") is None
+        assert _chapter_number("પ્રકરણ") is None
+        assert _chapter_number("અધ્યાય") is None
+
+    def test_gujarati_adhyay_does_not_collide_with_hindi(self):
+        """Gujarati અધ્યાય (U+0A85…) and Devanagari अध्याय (U+0905…) are distinct."""
+        from book_to_skill.utils import _chapter_number
+
+        assert _chapter_number("અધ્યાય ૫") == 5
+        assert _chapter_number("अध्याय ५") == 5
 
     def test_detects_russian_chapters(self):
         """Russian headings: `Глава N`, case-insensitive, with Arabic digits."""
@@ -1418,7 +1514,40 @@ class TestHtmlExtraction:
 
 
 class TestDocxExtraction:
-    """Tests for DOCX extraction via the zipfile fallback."""
+    """Tests for the preferred python-docx parser and the stdlib fallback."""
+
+    def test_extract_docx_python_docx_preserves_document_order(self, tmp_path):
+        from types import SimpleNamespace
+
+        from book_to_skill.parsers.docx import extract_docx_with_python_docx
+
+        docx_path = _make_minimal_docx(tmp_path / "interleaved.docx")
+        document = mock.Mock()
+        document.iter_inner_content.return_value = [
+            SimpleNamespace(text="Chapter 1: Validation"),
+            SimpleNamespace(
+                rows=[
+                    SimpleNamespace(
+                        cells=[
+                            SimpleNamespace(text="CH1_RULE"),
+                            SimpleNamespace(text="Reject negative balances."),
+                        ]
+                    )
+                ]
+            ),
+            SimpleNamespace(text="Chapter 2: Settlement"),
+        ]
+        python_docx = mock.Mock()
+        python_docx.Document.return_value = document
+
+        with mock.patch.dict(sys.modules, {"docx": python_docx}):
+            result = extract_docx_with_python_docx(str(docx_path))
+
+        assert result == (
+            "Chapter 1: Validation\n"
+            "CH1_RULE\tReject negative balances.\n"
+            "Chapter 2: Settlement"
+        )
 
     def test_extract_docx_zipfile_fallback(self, tmp_path):
         docx = _make_minimal_docx(tmp_path / "test.docx")
@@ -1799,6 +1928,22 @@ class TestDocxTableReconstruction:
         out = extract_docx_with_zipfile(self._make_docx(tmp_path, body))
         assert out == "Just a paragraph\nAnd another"
 
+    def test_inline_tabs_are_preserved(self, tmp_path):
+        body = (
+            "<w:p><w:r><w:t>Term</w:t><w:tab/><w:t>Definition</w:t>"
+            "</w:r></w:p>"
+        )
+        out = extract_docx_with_zipfile(self._make_docx(tmp_path, body))
+        assert out == "Term\tDefinition"
+
+    def test_inline_breaks_are_preserved(self, tmp_path):
+        body = (
+            "<w:p><w:r><w:t>First line</w:t><w:br/><w:t>Second line</w:t>"
+            "<w:cr/><w:t>Third line</w:t></w:r></w:p>"
+        )
+        out = extract_docx_with_zipfile(self._make_docx(tmp_path, body))
+        assert out == "First line\nSecond line\nThird line"
+
     def test_empty_cell_still_tab_joined(self, tmp_path):
         body = (
             "<w:tbl><w:tr>" + self._cell("A")
@@ -1854,6 +1999,32 @@ class TestEpubSpineOrder:
         out = extract_with_zipfile(self._make_epub(tmp_path, opf, files))
         assert out.index("FIRST") < out.index("SECOND")
 
+    def test_prefixed_opf_elements_preserve_spine_order_and_count(self, tmp_path):
+        # XML namespace prefixes are semantically equivalent to the default OPF
+        # namespace. File names deliberately sort opposite to the spine so a
+        # missed prefixed manifest/spine cannot pass through the sorted fallback.
+        opf = (
+            '<opf:package xmlns:opf="http://www.idpf.org/2007/opf" version="3.0">'
+            '<opf:manifest>'
+            '<opf:item id="c1" href="z-first.xhtml" '
+            'media-type="application/xhtml+xml"/>'
+            '<opf:item id="c2" href="a-second.xhtml" '
+            'media-type="application/xhtml+xml"/>'
+            '</opf:manifest><opf:spine>'
+            '<opf:itemref idref="c1"/><opf:itemref idref="c2"/>'
+            '</opf:spine></opf:package>'
+        )
+        files = {
+            "z-first.xhtml": self._doc("FIRST"),
+            "a-second.xhtml": self._doc("SECOND"),
+        }
+        epub_path = self._make_epub(tmp_path, opf, files)
+
+        out = extract_with_zipfile(epub_path)
+
+        assert out.index("FIRST") < out.index("SECOND")
+        assert count_epub_chapters(epub_path) == 2
+
     def test_non_spine_doc_kept_as_safety_net_after_spine(self, tmp_path):
         opf = (
             '<package xmlns="http://www.idpf.org/2007/opf" version="3.0"><manifest>'
@@ -1898,6 +2069,30 @@ class TestEpubSpineOrder:
             self._make_epub(tmp_path, opf, files, opf_name="OEBPS/content.opf")
         )
         assert "SUBDIR" in out
+
+    def test_manifest_href_fragment_is_not_part_of_archive_name(self, tmp_path):
+        opf = (
+            '<package xmlns="http://www.idpf.org/2007/opf" version="3.0"><manifest>'
+            '<item id="c1" href="chapter.xhtml#section-2" '
+            'media-type="application/xhtml+xml"/>'
+            '</manifest><spine><itemref idref="c1"/></spine></package>'
+        )
+        files = {"chapter.xhtml": self._doc("FRAGMENT")}
+        out = extract_with_zipfile(self._make_epub(tmp_path, opf, files))
+        assert "FRAGMENT" in out
+
+    def test_manifest_href_percent_encoding_maps_to_archive_name(self, tmp_path):
+        opf = (
+            '<package xmlns="http://www.idpf.org/2007/opf" version="3.0"><manifest>'
+            '<item id="c1" href="Text/Chapter%201.xhtml" '
+            'media-type="application/xhtml+xml"/>'
+            '</manifest><spine><itemref idref="c1"/></spine></package>'
+        )
+        files = {"OEBPS/Text/Chapter 1.xhtml": self._doc("ENCODED")}
+        out = extract_with_zipfile(
+            self._make_epub(tmp_path, opf, files, opf_name="OEBPS/content.opf")
+        )
+        assert "ENCODED" in out
 
     def test_non_self_closing_item_tag(self, tmp_path):
         # <item ...></item> (non-self-closing) is parsed via its opening tag.
